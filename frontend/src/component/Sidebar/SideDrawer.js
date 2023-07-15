@@ -26,8 +26,9 @@ import { useNavigate } from "react-router-dom";
 import { useDisclosure } from "@chakra-ui/hooks";
 import axios from "axios";
 import ChatLoading from "../ChatLoading";
-import UserListItem from "../../UserAvatar/UserListItem";
+import UserListItem from "../UserAvatar/UserListItem";
 import { getSender } from "../../config/ChatLogic";
+import NotificationBadge, {Effect} from "react-notification-badge";
 
 const SideDrawer = () => {
   const [search, setSearch] = useState("");
@@ -140,6 +141,7 @@ const SideDrawer = () => {
         </Text>
         <div>
           <Menu>
+            {/* For Notification */}
             <MenuButton p={1}>
               <NotificationBadge
                 count={notification.length}

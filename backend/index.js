@@ -4,9 +4,9 @@ const dotenv = require("dotenv");
 const userRoutes = require("./routes/userRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 const messageRoutes = require("./routes/messageRoutes");
-const { notFound, errorHandler } = require("./middleware/errorMiddleware");
-const path = require("path");
-const colors = require('colors')
+const { notFound, errorHandler } = require("./middlewares/errorMiddleware");
+
+const colors = require('colors');
 
 dotenv.config();
 connectDB();
@@ -21,24 +21,6 @@ app.use(express.json()); // to accept json data
 app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
-
-// --------------------------deployment------------------------------
-
-// const __dirname1 = path.resolve();
-
-// if (process.env.NODE_ENV === "production") {
-//   app.use(express.static(path.join(__dirname1, "/frontend/build")));
-
-//   app.get("*", (req, res) =>
-//     res.sendFile(path.resolve(__dirname1, "frontend", "build", "index.html"))
-//   );
-// } else {
-//   app.get("/", (req, res) => {
-//     res.send("API is running..");
-//   });
-// }
-
-// --------------------------deployment------------------------------
 
 // Error Handling middlewares
 app.use(notFound);
@@ -61,23 +43,28 @@ const io = require("socket.io")(server, {
 
 io.on("connection", (socket) => {
   console.log("Connected to socket.io");
-  socket.on("setup", (userData) => {
+  socket.on("setup", (userData) => { // this will take user data from the frontend.
     socket.join(userData._id);
     socket.emit("connected");
   });
 
+  //create a room for particular user and also when other user join it will add them into room.
   socket.on("join chat", (room) => {
     socket.join(room);
     console.log("User Joined Room: " + room);
   });
+
+  //new socket for typing & stop typing
   socket.on("typing", (room) => socket.in(room).emit("typing"));
   socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
 
+  //for new messages
   socket.on("new message", (newMessageRecieved) => {
     var chat = newMessageRecieved.chat;
 
     if (!chat.users) return console.log("chat.users not defined");
 
+    //when we send message then we will not received that message..
     chat.users.forEach((user) => {
       if (user._id == newMessageRecieved.sender._id) return;
 
@@ -85,6 +72,7 @@ io.on("connection", (socket) => {
     });
   });
 
+  //cleanup the socket
   socket.off("setup", () => {
     console.log("USER DISCONNECTED");
     socket.leave(userData._id);
